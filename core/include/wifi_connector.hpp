@@ -25,22 +25,14 @@ public:
     void connect() override;
 
     /// @brief Connect to the WiFi network using the provided SSID and password.
-    void connect(const unsigned short port, const String& ssid, const String& pass) override;
+    void connect(const String& ssid, const String& pass) override;
     
     /// @brief Disconnect from the WiFi network.
     void disconnect() override;
     
     /// @brief Check if the WiFi connection is active.
     /// @return true if connected to the WiFi network, false otherwise.
-    bool is_client_connected() override;
-
-    /// @brief 
-    /// @return 
-    WiFiClient& get_client() override;
-
-    /// @brief Pool modbus controller
-    /// @return 
-    bool pool() override;
+    bool is_connected() override;
 
 private:
 
@@ -71,23 +63,14 @@ private:
     /// @brief Print the current WiFi status, including SSID, IP address, and signal strength.
     static void print_status();
 
-    /// @brief WiFi server used for network communication.
-    static WiFiServer wifi_server_;
-    
-    /// @brief WiFi client used for handling incoming connections.
-    WiFiClient wifi_client_;
-
-    /// @brief Port number for the WiFi server.
-    unsigned short port_{502};
-
     /// @brief WiFi network credentials.
     String ssid_{""};
 
     /// @brief WiFi network password.
     String pass_{""};
 
-    /// @brief Connection status
-    bool is_client_connected_{false};
+    /// @brief 
+    static bool is_wifi_connected_;
 };
 
 } // namespace rover_modbus_tcp_led_controller

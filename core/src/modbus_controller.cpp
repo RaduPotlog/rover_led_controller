@@ -14,24 +14,60 @@ ModbusController::~ModbusController()
 
 }
 
+ModbusMessage ModbusController::ReadMultipleRegisters_FC_0x03(ModbusMessage request) 
+{
+    ModbusMessage response;
+
+    response.setError(request.getServerID(), request.getFunctionCode(), SUCCESS);
+
+    return response;
+}
+
+ModbusMessage ModbusController::WriteMultipleRegisters_FC_0x10(ModbusMessage request) 
+{
+    ModbusMessage response;
+
+    if (request.getFunctionCode() != WRITE_MULT_REGISTERS) {
+        response.setError(request.getServerID(), request.getFunctionCode(), FC_MISMATCH);
+        return response;
+    }
+
+    uint16_t addr = 0;           
+    uint16_t words = 0;
+    request.get(2, addr);
+    request.get(4, words);
+
+    if ((addr + words) > (sizeof(memo) / sizeof(memo[0]))) {
+        response.setError(request.getServerID(), request.getFunctionCode(), ILLEGAL_DATA_ADDRESS);
+        return response;
+    }
+
+    const uint8_t *data_ptr = request.data();
+
+    memcpy(&memo[addr], &data_ptr[7], words * sizeof(uint16_t));
+
+    response.setError(request.getServerID(), request.getFunctionCode(), SUCCESS);
+
+    return response;
+}
+
 void ModbusController::init(ConnectorInterface *connector_interface)
 {
-    if (is_started_) {
+    if (is_initialized_) {
         return;
     }
 
     connector_interface_ = connector_interface;
 
-    if (modbus_tcp_server_.begin()) {
-        is_started_ = true;
+    modbus_server_wifi_.registerWorker(1, WRITE_MULT_REGISTERS, write_multiple_registers_worker_);
+    modbus_server_wifi_.registerWorker(1, READ_HOLD_REGISTER, read_multiple_registers_worker_);
 
-        modbus_tcp_server_.configureHoldingRegisters(0x00, 52);
-    }
+    is_initialized_ = true;
 }
 
 bool ModbusController::pool()
 {
-    if (is_started_ == false) {
+    if (is_initialized_ == false) {
         return false;
     }
     
@@ -39,33 +75,47 @@ bool ModbusController::pool()
         return false;
     }
 
-    if (!connector_interface_->is_client_connected()) {
-        return (is_client_accepted_ = false);
+    if (!connector_interface_->is_connected()) {
+        return (is_interface_connected_ = false);
     }
 
-    if (is_client_accepted_ == false) {
-        modbus_tcp_server_.accept(connector_interface_->get_client());
-        is_client_accepted_ = true;
-        Serial.println("New modbus client accepted!");
+    if (is_interface_connected_ == false) {
+        Serial.println("Start modbus server...");
+        modbus_server_wifi_.start(502, 1, 3600000);
+        is_interface_connected_ = true;
+        Serial.println("Modbus server started!");
     }
-
-    modbus_tcp_server_.poll();
 
     return true;
 }
 
-long ModbusController::read_registers(const uint16_t address)
+bool ModbusController::read_registers(const uint16_t address, uint16_t *buff, const size_t size)
 {
-    if (is_client_accepted_ == false) {
-        return -1;
+    if (is_initialized_ == false) {
+        return false;
     }
+    
+    if (is_interface_connected_ == false) {
+        return false;
+    }
+    
+    memcpy(buff, &memo[address], size * sizeof(uint16_t));
 
-    return modbus_tcp_server_.holdingRegisterRead(address);
+    return true;
 }
 
 bool ModbusController::is_connected()
 {
-    return is_client_accepted_;
+    return is_interface_connected_;
+}
+
+bool ModbusController::is_client_connected()
+{
+    if (modbus_server_wifi_.activeClients() > 0) {
+        return true;
+    }
+
+    return false;
 }
 
 } // namespace rover_modbus_tcp_led_controller

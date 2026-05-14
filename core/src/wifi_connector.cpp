@@ -3,8 +3,7 @@
 namespace rover_modbus_tcp_led_controller
 {
 
-// ModbusTCPServer WifiConnector::modbus_tcp_server_;
-WiFiServer WifiConnector::wifi_server_;
+bool WifiConnector::is_wifi_connected_ = false;
 
 WifiConnector& WifiConnector::getInstance()
 {
@@ -15,7 +14,6 @@ WifiConnector& WifiConnector::getInstance()
 void WifiConnector::station_connected_callback(WiFiEvent_t event, WiFiEventInfo_t info)
 {
     Serial.println("Connected to router successfully!");
-    wifi_server_.begin(502);
 }
 
 void WifiConnector::got_ip_callback(WiFiEvent_t event, WiFiEventInfo_t info)
@@ -23,6 +21,7 @@ void WifiConnector::got_ip_callback(WiFiEvent_t event, WiFiEventInfo_t info)
     Serial.println("WiFi connected");
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
+    is_wifi_connected_ = true;
 }
 
 void WifiConnector::disconnected_callback(WiFiEvent_t event, WiFiEventInfo_t info)
@@ -32,8 +31,7 @@ void WifiConnector::disconnected_callback(WiFiEvent_t event, WiFiEventInfo_t inf
     Serial.println(info.wifi_sta_disconnected.reason);
     Serial.println("Trying to Reconnect");
 
-    wifi_server_.stop();
-    wifi_server_.close();
+    is_wifi_connected_ = false;
     WiFi.reconnect();
 }
 
@@ -54,15 +52,13 @@ void WifiConnector::print_status()
 
 void WifiConnector::connect()
 {
-    connect(port_, ssid_, pass_);
+    connect(ssid_, pass_);
 }
 
 void WifiConnector::connect(
-    const unsigned short port, 
     const String& ssid, 
     const String& pass)
 {
-    port_ = port;
     ssid_ = ssid;
     pass_ = pass;
 
@@ -71,46 +67,17 @@ void WifiConnector::connect(
     WiFi.onEvent(disconnected_callback, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
     WiFi.mode(WIFI_STA);
     
-    if (WL_CONNECTED == WiFi.begin(ssid_, pass_)) {
-        Serial.println("Connected to WiFi!");
-    } else {
-        Serial.println("Failed to connect to WiFi!");
-    }
+    WiFi.begin(ssid_, pass_);
 }
 
 void WifiConnector::disconnect()
 {
-
+    WiFi.disconnect();
 }
 
-bool WifiConnector::is_client_connected()
+bool WifiConnector::is_connected()
 {   
-    return is_client_connected_;
-}
-
-WiFiClient& WifiConnector::get_client() 
-{
-    return wifi_client_;
-}
-
-bool WifiConnector::pool() 
-{
-    if (is_client_connected_ == false) {
-        wifi_client_ = wifi_server_.available();
-        
-        if (!wifi_client_) {
-            return (is_client_connected_ = false);
-        }
-        
-        is_client_connected_ = true;
-        Serial.println("New client connected!");
-    }
-    
-    if (!wifi_client_) {
-        is_client_connected_ = false;
-    }
-
-    return true;
+    return is_wifi_connected_;
 }
 
 } // namespace rover_modbus_tcp_led_controller

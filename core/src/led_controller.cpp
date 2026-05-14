@@ -34,30 +34,33 @@ bool LedController::pool()
         return false;
     }
 
-    uint16_t reg_index = 2;
-    long holding_register_value = 0;
-    bool led_show = true;
-
-    for (int i = 0; i < NUM_LEDS; i++) {
-        holding_register_value = modbus_controller_->read_registers(reg_index + 1);
-        led_state = static_cast<uint32_t>(holding_register_value);
-        holding_register_value = modbus_controller_->read_registers(reg_index);
-        if (holding_register_value < 0) {
-            led_show = false;
-            break;
+    if (!modbus_controller_->is_client_connected()) {
+        for (int i = 0; i < NUM_LEDS; i++) {
+            led_state = 0x0000FF00U;
+            leds_[i] = CRGB(led_state);
         }
 
-        led_state |= static_cast<uint32_t>(holding_register_value << 16);
-        led_state = led_state & 0x00FFFFFFU;
-        leds_[i] = CRGB(led_state);
-        reg_index += 2;
-    }
-    
-    if (led_show) {
-      FastLED.show();
+        FastLED.show();
+        return false;
     }
 
-    return led_show;
+    if (!modbus_controller_->read_registers(2, led_buff_temp, sizeof(led_buff_temp) / sizeof(led_buff_temp[0]))) {
+        return false;
+    }
+
+    uint32_t led_index = 0;
+
+    for (int i = 0; i < sizeof(led_buff_temp) / sizeof(led_buff_temp[0]); i = i + 2) {
+        led_state  = static_cast<uint32_t>(led_buff_temp[i]);
+        led_state |= static_cast<uint32_t>(led_buff_temp[i + 1] << 16);
+        led_state = led_state & 0x00FFFFFFU;
+        leds_[led_index] = CRGB(led_state);
+        led_index++;
+    }
+    
+    FastLED.show();
+    
+    return true;
 }
 
 } // namespace rover_modbus_tcp_led_controller

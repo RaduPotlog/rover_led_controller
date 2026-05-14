@@ -29,6 +29,8 @@ private:
     ModbusController * modbus_controller_;
 
     CRGB leds_[NUM_LEDS];
+
+    uint16_t led_buff_temp[NUM_LEDS * 2] = {0};
 };
 
 } // namespace rover_modbus_tcp_led_controller

@@ -17,25 +17,16 @@ public:
     virtual void connect() = 0;
     
     /// @brief Connect to the network with specific parameters.
-    /// @param port 
     /// @param ssid 
     /// @param pass 
-    virtual void connect(const unsigned short port, const String& ssid, const String& pass) = 0;
+    virtual void connect(const String& ssid, const String& pass) = 0;
 
     /// @brief Disconnect from the network.
     virtual void disconnect() = 0;
     
-    /// @brief Check if the client connection is active.
+    /// @brief Check if the interface connection is active.
     /// @return true if connected, false otherwise.
-    virtual bool is_client_connected() = 0;
-
-    /// @brief Pool connection stack
-    /// @return
-    virtual bool pool() = 0;
-
-    /// @brief 
-    /// @return 
-    virtual WiFiClient& get_client() = 0;
+    virtual bool is_connected() = 0;
 };
 
 } // namespace rover_modbus_tcp_led_controller

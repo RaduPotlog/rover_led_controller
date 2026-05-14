@@ -26,7 +26,7 @@ void setup()
   
     // Connect to modbus controller
     gPtrModbusConnectionInterface = &rover_modbus_tcp_led_controller::WifiConnector::getInstance();
-    gPtrModbusConnectionInterface->connect(port, ssid, pass);
+    gPtrModbusConnectionInterface->connect(ssid, pass);
     gModbusController.init(gPtrModbusConnectionInterface);
 }
 
@@ -34,8 +34,9 @@ void loop()
 {
     if (gPtrModbusConnectionInterface != nullptr) {
         // Pool controllers
-        (void)gPtrModbusConnectionInterface->pool();
         (void)gModbusController.pool();
         (void)gLedController.pool();
     }
+
+    delay(100);
 }
