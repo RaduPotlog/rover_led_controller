@@ -6,37 +6,35 @@
 #include "wifi_connector.hpp"
 #include "modbus_controller.hpp"
 #include "led_controller.hpp"
+#include "udp_connection.hpp"
 
-const String ssid = "MikroLAB";
-const String pass = "@2wsxdr%5";
-unsigned short port = 502;
+const String ssid = "TP-Link_30C0";
+const String pass = "39063106";
+const int port = 3333;
 
-rover_modbus_tcp_led_controller::ConnectorInterface *gPtrModbusConnectionInterface = nullptr;
+rover_modbus_tcp_led_controller::ConnectorInterface *gWifiConnectionInterface = nullptr;
 rover_modbus_tcp_led_controller::LedController gLedController;
-rover_modbus_tcp_led_controller::ModbusController gModbusController;
+rover_modbus_tcp_led_controller::UdpConnection  gUdpConnection;
 
 void setup()
 {
     Serial.begin(115200);
   
-    // Wait for serial port to connect. Needed for native USB
     while (!Serial) { ; }
 
     Serial.println("Modbus TCP Server LED");
   
-    // Connect to modbus controller
-    gPtrModbusConnectionInterface = &rover_modbus_tcp_led_controller::WifiConnector::getInstance();
-    gPtrModbusConnectionInterface->connect(ssid, pass);
-    gModbusController.init(gPtrModbusConnectionInterface, &gLedController);
+    gWifiConnectionInterface = &rover_modbus_tcp_led_controller::WifiConnector::getInstance();
+    gWifiConnectionInterface->connect(ssid, pass);
+    gUdpConnection.init(gWifiConnectionInterface, port, [](AsyncUDPPacket packet) {
+        gLedController.update(reinterpret_cast<const uint32_t *>(packet.data()));
+    });
 }
 
 void loop()
 {
-    if (gPtrModbusConnectionInterface != nullptr) {
-        // Pool controllers
-        (void)gModbusController.pool();
+    if (gWifiConnectionInterface != nullptr) {
         (void)gLedController.pool();
+        (void)gUdpConnection.pool();
     }
-
-    // delay(200);
 }

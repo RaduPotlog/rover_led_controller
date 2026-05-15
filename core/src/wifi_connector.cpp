@@ -52,7 +52,7 @@ void WifiConnector::print_status()
 
 void WifiConnector::connect()
 {
-    connect(ssid_, pass_);
+
 }
 
 void WifiConnector::connect(
@@ -67,6 +67,17 @@ void WifiConnector::connect(
     WiFi.onEvent(disconnected_callback, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
     WiFi.mode(WIFI_STA);
     
+    IPAddress local_ip(192, 168, 99, 101);
+    IPAddress gateway(192, 168, 99, 1);
+    IPAddress subnet(255, 255, 255, 0);
+    IPAddress primary_dns(8, 8, 8, 8);
+    IPAddress secondary_dns(8, 8, 4, 4);
+
+    if (!WiFi.config(local_ip, gateway, subnet, primary_dns, secondary_dns)) {
+        Serial.println("STA Failed to configure");
+        return;
+    }
+
     WiFi.begin(ssid_, pass_);
 }
 

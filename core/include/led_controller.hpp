@@ -29,6 +29,10 @@ public:
     void update(const uint16_t *led_buff);
 
     /// @brief 
+    /// @param led_buff
+    void update(const uint32_t *led_buff);
+
+    /// @brief 
     /// @return 
     bool pool();
     
