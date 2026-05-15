@@ -5,6 +5,7 @@ namespace rover_modbus_tcp_led_controller
 
 ModbusController::ModbusController()
 : connector_interface_{nullptr}
+, led_controller_{nullptr}
 {
 
 }
@@ -48,16 +49,19 @@ ModbusMessage ModbusController::WriteMultipleRegisters_FC_0x10(ModbusMessage req
 
     response.setError(request.getServerID(), request.getFunctionCode(), SUCCESS);
 
+    led_controller_->update(&memo[2]);
+
     return response;
 }
 
-void ModbusController::init(ConnectorInterface *connector_interface)
+void ModbusController::init(ConnectorInterface *connector_interface, LedController *led_controller)
 {
     if (is_initialized_) {
         return;
     }
 
     connector_interface_ = connector_interface;
+    led_controller_ = led_controller;
 
     modbus_server_wifi_.registerWorker(1, WRITE_MULT_REGISTERS, write_multiple_registers_worker_);
     modbus_server_wifi_.registerWorker(1, READ_HOLD_REGISTER, read_multiple_registers_worker_);
@@ -81,7 +85,7 @@ bool ModbusController::pool()
 
     if (is_interface_connected_ == false) {
         Serial.println("Start modbus server...");
-        modbus_server_wifi_.start(502, 1, 3600000);
+        modbus_server_wifi_.start(502, 1, 3600000, 1);
         is_interface_connected_ = true;
         Serial.println("Modbus server started!");
     }

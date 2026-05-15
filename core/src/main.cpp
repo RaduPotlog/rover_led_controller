@@ -12,8 +12,8 @@ const String pass = "@2wsxdr%5";
 unsigned short port = 502;
 
 rover_modbus_tcp_led_controller::ConnectorInterface *gPtrModbusConnectionInterface = nullptr;
+rover_modbus_tcp_led_controller::LedController gLedController;
 rover_modbus_tcp_led_controller::ModbusController gModbusController;
-rover_modbus_tcp_led_controller::LedController gLedController(gModbusController);
 
 void setup()
 {
@@ -27,7 +27,7 @@ void setup()
     // Connect to modbus controller
     gPtrModbusConnectionInterface = &rover_modbus_tcp_led_controller::WifiConnector::getInstance();
     gPtrModbusConnectionInterface->connect(ssid, pass);
-    gModbusController.init(gPtrModbusConnectionInterface);
+    gModbusController.init(gPtrModbusConnectionInterface, &gLedController);
 }
 
 void loop()
@@ -38,5 +38,5 @@ void loop()
         (void)gLedController.pool();
     }
 
-    delay(100);
+    // delay(200);
 }

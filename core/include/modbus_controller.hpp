@@ -4,6 +4,7 @@
 #include <ModbusServerWiFi.h>
 
 #include "connector_interface.hpp"
+#include "led_controller.hpp"
 
 namespace rover_modbus_tcp_led_controller
 {
@@ -21,7 +22,8 @@ public:
 
     /// @brief 
     /// @param connector_interface 
-    void init(ConnectorInterface *connector_interface);
+    /// @param led_controller 
+    void init(ConnectorInterface *connector_interface, LedController *led_controller);
 
     /// @brief 
     /// @return 
@@ -60,6 +62,10 @@ private:
     /// @brief 
     ConnectorInterface *connector_interface_;
 
+    /// @brief 
+    LedController *led_controller_;
+
+    /// @brief
     ModbusServerTCP<WiFiServer, WiFiClient> modbus_server_wifi_;
 
     /// @brief 
