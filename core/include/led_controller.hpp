@@ -4,12 +4,11 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
-// #include "modbus_controller.hpp"
+#define NUM_LEDS 24
 
 namespace rover_modbus_tcp_led_controller
 {
 
-#define NUM_LEDS 24
 #define DATA_PIN 13
 #define CLOCK_PIN 14
 

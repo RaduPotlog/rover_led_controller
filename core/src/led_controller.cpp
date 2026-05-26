@@ -31,11 +31,8 @@ void LedController::update(const uint16_t *led_buff)
 
 void LedController::update(const uint32_t *led_buff) 
 {
-    uint32_t buff_index = 1UL;
-
     for (int i = 0; i < NUM_LEDS; i++) {
-        leds_[i] = CRGB(led_buff[buff_index] & 0x00FFFFFFUL);
-        buff_index++;
+        leds_[i] = CRGB(led_buff[i] & 0x00FFFFFFUL);
     }
     
     FastLED.show();
